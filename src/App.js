@@ -40,38 +40,8 @@ const hashmap = window.location.hash
 
 window.location.hash = "";
 
-let deviceId;
 
-window.onSpotifyWebPlaybackSDKReady = () => {
-	const token = hashmap.access_token;
-	const player = new window.Spotify.Player({
-	  name: 'Web Playback SDK Quick Start Player',
-	  getOAuthToken: cb => { cb(token); }
-	});
-  
-	// Error handling
-	player.addListener('initialization_error', ({ message }) => { console.error(message); });
-	player.addListener('authentication_error', ({ message }) => { console.error(message); });
-	player.addListener('account_error', ({ message }) => { console.error(message); });
-	player.addListener('playback_error', ({ message }) => { console.error(message); });
-  
-	// Playback status updates
-	player.addListener('player_state_changed', state => { console.log(state); });
-  
-	// Ready
-	player.addListener('ready', ({ device_id }) => {
-	  deviceId = device_id;
-	  console.log('Ready with Device ID', device_id);
-	});
-  
-	// Not Ready
-	player.addListener('not_ready', ({ device_id }) => {
-	  console.log('Device ID has gone offline', device_id);
-	});
-  
-	// Connect to the player!
-	player.connect();
-  };
+
 
 
 class App extends Component {
@@ -80,6 +50,8 @@ class App extends Component {
 		super(props);
 		this.state = { };
 
+		
+
 		this.fetchUserData = this.fetchUserData.bind(this);
 		this.fetchPlaylists = this.fetchPlaylists.bind(this);
 		this.setInitialList = this.setInitialList.bind(this);
@@ -87,6 +59,38 @@ class App extends Component {
 		this.selectPlayList = this.selectPlayList.bind(this);
 		this.spreadFunction = this.spreadFunction.bind(this);
 		this.playSomeMusic = this.playSomeMusic.bind(this);
+		
+
+		window.onSpotifyWebPlaybackSDKReady = () => {
+			const token = hashmap.access_token;
+			this.player = new window.Spotify.Player({
+			  name: 'Playlist Scrambler Player',
+			  getOAuthToken: cb => { cb(token); }
+			});
+		  
+			// Error handling
+			this.player.addListener('initialization_error', ({ message }) => { console.error(message); });
+			this.player.addListener('authentication_error', ({ message }) => { console.error(message); });
+			this.player.addListener('account_error', ({ message }) => { console.error(message); });
+			this.player.addListener('playback_error', ({ message }) => { console.error(message); });
+		  
+			// Playback status updates
+			this.player.addListener('player_state_changed', state => { this.setState({playerState : state}) });
+		  
+			// Ready
+			this.player.addListener('ready', ({ device_id }) => {
+			  this.deviceId = device_id;
+			  console.log('Ready with Device ID', device_id);
+			});
+		  
+			// Not Ready
+			this.player.addListener('not_ready', ({ device_id }) => {
+			  console.log('Device ID has gone offline', device_id);
+			});
+		  
+			// Connect to the player!
+			this.player.connect();
+		  };
 
 
 	}
@@ -178,7 +182,7 @@ class App extends Component {
 		    return  alltracks; 
 			} , [] );
 
-			this.playSomeMusic(deviceId , randomTrackList)									  
+			this.playSomeMusic(this.deviceId , randomTrackList)									  
 	} 
 
 	getPlaylistItem(playListId, trackIndex){
@@ -194,9 +198,11 @@ class App extends Component {
 	
 	playSomeMusic(deviceid, trackList){
 		axios.put(`https://api.spotify.com/v1/me/player/play?device_id=${deviceid}` , { uris : trackList })
-		.then(result => console.log(result))
+		.then(result => this.setPlayerState())
 		.catch(error => error);
 	}
+
+
 
 
 
@@ -207,10 +213,17 @@ class App extends Component {
 		}
 
 		return (
-			<div className="App"><div><h1>PLAYLIST SCRAMBLER</h1></div>
-				<div className="container"> <Table data={this.state.playListArray} onClickCallBack={this.selectPlayList} />
-					<button type="button" disabled={!this.state.selectedPlaylistArray || this.state.selectedPlaylistArray.length < 1}  onClick={() => this.generateRandomizedPlaylist()}> Generate randomized playlist </button>
-				</div></div>
+			<div className="App">
+				<div><h1>PLAYLIST SCRAMBLER</h1></div>
+				<div className="container"> 
+					<Table data={this.state.playListArray} onClickCallBack={this.selectPlayList} />
+					<button type="button" disabled={!this.state.selectedPlaylistArray || this.state.selectedPlaylistArray.length < 1}  
+						onClick={() => this.generateRandomizedPlaylist()}> Generate randomized playlist </button>
+				<div>
+			</div>
+			</div>
+				<Player playerState={this.state.playerState} />				
+			</div>
 
 		)
 
@@ -218,6 +231,22 @@ class App extends Component {
 	}
 
 
+}
+
+function Player({playerState}){
+	if (playerState){
+		return (
+		<div>
+		<div>Now Playing: {playerState.track_window.current_track.name}</div>
+		Next:
+		{playerState.track_window.next_tracks.map(webtrack => webtrack.name )}
+			
+		</div>
+			
+		)
+	}
+
+	return null;
 }
 
 function Table({ data, onClickCallBack }) {
