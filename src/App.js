@@ -1,8 +1,12 @@
 import React, { Component } from "react";
+import Button from 'react-bootstrap/Button';
+import Table from './Table.js';
+import Player from './Player.js';
 
 
-import logo from "./logo.svg";
+
 import "./App.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 
 
@@ -125,7 +129,7 @@ class App extends Component {
 	}
 
 	setInitialList(items) {
-		let playListArray = items.map(({ id, name, tracks }) => ({ id: id, name: name, tracksCount: tracks.total, checked: false }));
+		let playListArray = items.map(({ id, name, tracks, images }) => ({ id: id, name: name, tracksCount: tracks.total, image: images[0], checked: false }));
 		this.setState({ playListArray });
 	}
 
@@ -177,16 +181,21 @@ class App extends Component {
 	}
 
 	spreadFunction(...res) {
-		let randomTrackList = res.reduce( function (alltracks , thisPlaylisttracks) {
-			alltracks.push(thisPlaylisttracks.data.items[0].track.uri);		   
+		this.randomTrackList = res.reduce( function (alltracks , thisPlaylisttracks) {
+			alltracks.push(thisPlaylisttracks.data.items[0]);		   
 		    return  alltracks; 
 			} , [] );
 
-			this.playSomeMusic(this.deviceId , randomTrackList)									  
+		
+
+		const randomTrackUriList = this.randomTrackList.map(item =>  item.track.uri);
+		
+
+		this.playSomeMusic(this.deviceId , randomTrackUriList)									  
 	} 
 
 	getPlaylistItem(playListId, trackIndex){
-		return axios.get(`https://api.spotify.com/v1/playlists/${playListId}/tracks?limit=1&offset=${trackIndex}&fields=items(track(uri))`);
+		return axios.get(`https://api.spotify.com/v1/playlists/${playListId}/tracks?limit=1&offset=${trackIndex}`);
 	}
 
 	
@@ -211,19 +220,30 @@ class App extends Component {
 		if (!this.state.playListArray) {
 			return null;
 		}
+		const generateButtonEnabled = this.state.selectedPlaylistArray && this.state.selectedPlaylistArray.length > 0;
+		let button;
+		if(generateButtonEnabled){
+			button = <Button size="lg" onClick={() => this.generateRandomizedPlaylist()} block>Generate randomized playlist</Button>
+		}else{
+			button = <Button size="lg" variant="secondary" disabled block>Generate randomized playlist</Button>
+		}
 
 		return (
 			<div className="App">
 				<div><h1>PLAYLIST SCRAMBLER</h1></div>
-				<div className="container"> 
-					<Table data={this.state.playListArray} onClickCallBack={this.selectPlayList} />
-					<button type="button" disabled={!this.state.selectedPlaylistArray || this.state.selectedPlaylistArray.length < 1}  
-						onClick={() => this.generateRandomizedPlaylist()}> Generate randomized playlist </button>
 				<div>
+					<div style={{width : '30%' , margin: '0 auto' , padding: '20px'}}> 
+						{button}
+
+						<Table data={this.state.playListArray} onClickCallBack={this.selectPlayList} />
+						
+					<div>
+					</div>
+						<Player playerState={this.state.playerState} randomTrackList={this.randomTrackList} deviceId={this.deviceId}  />				
+					</div>
+				</div>
 			</div>
-			</div>
-				<Player playerState={this.state.playerState} />				
-			</div>
+			
 
 		)
 
@@ -233,68 +253,6 @@ class App extends Component {
 
 }
 
-function Player({playerState}){
-	if (playerState){
-		return (
-		<div>
-		<div>Now Playing: {playerState.track_window.current_track.name}</div>
-		Next:
-		{playerState.track_window.next_tracks.map(webtrack => webtrack.name )}
-			
-		</div>
-			
-		)
-	}
-
-	return null;
-}
-
-function Table({ data, onClickCallBack }) {
-
-	
-
-	const uncheckStyle = {
-		padding: '10px',
-		border: 'solid 1px gray',
-		background: 'papayawhip',
-	}
-
-	const checkStyle = {
-		padding: '10px',
-		border: 'solid 1px gray',
-		background: 'red',
-	}
-
-	return (<table style={{ border: 'solid 1px blue' }}>
-		<thead>
-			<tr >
-				<th
-					style={{
-						borderBottom: 'solid 3px red',
-						background: 'aliceblue',
-						color: 'black',
-						fontWeight: 'bold',
-					}}
-				>
-					Playlist
-	               </th>
-			</tr>
-		</thead>
-		<tbody >
-			{data.map(row => {
-				return (
-					<tr key={row.id} onClick={() => onClickCallBack(row)}>
-						<td style={row.checked ?checkStyle : uncheckStyle }>
-						{row.name}
-						</td>
-					</tr>
-				)
-			})}
-		</tbody>
-	</table>
-	)
-
-}
 
 
 export default App;
