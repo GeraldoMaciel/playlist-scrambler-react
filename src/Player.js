@@ -2,6 +2,10 @@ import React, { Component } from "react";
 import Card from "react-bootstrap/Card";
 import ListGroup from "react-bootstrap/ListGroup";
 import Button from "react-bootstrap/Button";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import Image from "react-bootstrap/Image";
 
 import axios from "axios";
 
@@ -65,57 +69,69 @@ class Player extends Component {
           </Button>
         );
       }
+      console.log(this.props.randomTrackList);
       return (
-        <div>
-          <table>
-            <tbody>
-              <tr>
-                <td>
-                  <Card>
-                    <Card.Img
-                      variant="top"
-                      src={
-                        this.props.playerState.track_window.current_track.album
-                          .images[0].url
-                      }
-                    />
-                    <Card.Body>
-                      <Card.Title>
-                        {this.props.playerState.track_window.current_track.name}
-                      </Card.Title>
-                      <Button
-                        variant="primary"
-                        onClick={() => this.skipToPreviousPlayback()}
-                      >
-                        {" "}
-                        &lt;&lt;{" "}
-                      </Button>
-                      {button}
-                      <Button
-                        variant="primary"
-                        onClick={() => this.skipToNextPlayback()}
-                      >
-                        {" "}
-                        &gt;&gt;{" "}
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </td>
-                <td>
-                  <ListGroup>
-                    {this.props.randomTrackList.map((item) => {
-                      return (
-                        <ListGroup.Item key={item.track.uri}>
-                          {item.track.album.name} - {item.track.name}
-                        </ListGroup.Item>
-                      );
-                    })}
-                  </ListGroup>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <Container>
+          <Row>
+            <Col>
+              <Card>
+                <Card.Img
+                  variant="top"
+                  src={
+                    this.props.playerState.track_window.current_track.album
+                      .images[0].url
+                  }
+                />
+                <Card.Body>
+                  <Card.Title>
+                    {this.props.playerState.track_window.current_track.name}
+                  </Card.Title>
+                  <Button
+                    variant="primary"
+                    onClick={() => this.skipToPreviousPlayback()}
+                  >
+                    {" "}
+                    &lt;&lt;{" "}
+                  </Button>
+                  {button}
+                  <Button
+                    variant="primary"
+                    onClick={() => this.skipToNextPlayback()}
+                  >
+                    {" "}
+                    &gt;&gt;{" "}
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col>
+              <ListGroup>
+                {this.props.randomTrackList.map((item) => {
+                  return (
+                    <ListGroup.Item key={item.track.uri}>
+                      <table>
+                        <tbody>
+                          <tr>
+                            <td>
+                              {" "}
+                              <Image
+                                src={item.track.album.images[2].url}
+                                roundedCircle
+                              />
+                            </td>
+                            <td>
+                              {item.track.name}- {item.track.album.name}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </ListGroup.Item>
+                  );
+                })}
+              </ListGroup>
+            </Col>
+          </Row>
+        </Container>
       );
     }
 

@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import Button from "react-bootstrap/Button";
-import Fade from "react-bootstrap/Fade";
+
 import Table from "./Table.js";
 import Player from "./Player.js";
 
@@ -25,7 +24,7 @@ const scopes = [
   "playlist-read-collaborative",
 ];
 
-const PLAYLIST_SIZE = 10;
+const PLAYLIST_SIZE = 20;
 
 // Get the hash of the url
 const hashmap = window.location.hash
@@ -232,19 +231,12 @@ class App extends Component {
         </div>
         <div>
           <div style={{ width: "50%", margin: "0 auto", padding: "20px" }}>
-            <Fade in={generateButtonEnabled}>
-              <Button
-                size="lg"
-                onClick={() => this.generateRandomizedPlaylist()}
-                block
-              >
-                Generate randomized playlist
-              </Button>
-            </Fade>
-
             <Table
               data={this.state.playListArray}
               onClickCallBack={this.selectPlayList}
+              generateButtonEnabled={generateButtonEnabled}
+              playerState={this.state.playerState}
+              generateRandomizedPlaylistMethod={this.generateRandomizedPlaylist}
             />
 
             <div></div>
