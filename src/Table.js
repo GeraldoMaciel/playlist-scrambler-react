@@ -52,7 +52,12 @@ function Table({ data, onClickCallBack }) {
 
                 return (
                   <Col key={item.id} style={style}>
-                    <Figure onClick={() => onClickCallBack(item)}>
+                    <Figure
+                      onClick={() => onClickCallBack(item)}
+                      onError={(event) => {
+                        event.target.src = "/spotify-default.jpg";
+                      }}
+                    >
                       <Figure.Image
                         width={171}
                         height={180}
