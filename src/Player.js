@@ -67,7 +67,10 @@ class Player extends Component {
           </Button>
         );
       }
-      console.log(this.props.randomTrackList);
+      const style = {
+        maxHeight: "480px",
+        overflowY: "auto",
+      };
       return (
         <Container>
           <Row>
@@ -103,7 +106,7 @@ class Player extends Component {
               </Card>
             </Col>
             <Col>
-              <ListGroup>
+              <ListGroup style={style}>
                 {this.props.randomTrackList.map((item) => {
                   return (
                     <ListGroup.Item key={item.track.uri}>

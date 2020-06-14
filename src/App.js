@@ -211,7 +211,6 @@ class App extends Component {
           <Table
             data={this.state.playListArray}
             onClickCallBack={this.selectPlayList}
-            playerState={this.state.playerState}
           />
         </div>
       );

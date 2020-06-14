@@ -4,11 +4,7 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
-function Table({ data, onClickCallBack, playerState }) {
-  if (playerState) {
-    return null;
-  }
-
+function Table({ data, onClickCallBack }) {
   const chunck = (array, size) => {
     const chunked_arr = [];
     let index = 0;
