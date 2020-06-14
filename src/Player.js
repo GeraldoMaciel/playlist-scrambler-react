@@ -13,18 +13,16 @@ class Player extends Component {
   constructor(props) {
     super(props);
     this.state = {};
-
-    this.startResumePlayback = this.startResumePlayback.bind(this);
   }
 
-  startResumePlayback() {
+  startResumePlayback = () => {
     axios
       .put(`https://api.spotify.com/v1/me/player/play`, {
         device_id: this.props.deviceId,
       })
       .then()
       .catch((error) => error);
-  }
+  };
 
   pausePlayback() {
     axios

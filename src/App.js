@@ -7,6 +7,9 @@ import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 
+import Controller from "./Controller.js";
+import PlaylistGenerator from "./PlaylistGenerator";
+
 const authEndpoint = "https://accounts.spotify.com/authorize";
 
 const clientId = "78fffce2862d4584bcb9eb68d18fbad1";
@@ -45,15 +48,7 @@ class App extends Component {
     super(props);
     this.state = {};
 
-    this.fetchUserData = this.fetchUserData.bind(this);
-    this.fetchPlaylists = this.fetchPlaylists.bind(this);
-    this.setInitialList = this.setInitialList.bind(this);
-    this.generateRandomizedPlaylist = this.generateRandomizedPlaylist.bind(
-      this
-    );
-    this.selectPlayList = this.selectPlayList.bind(this);
-    this.spreadFunction = this.spreadFunction.bind(this);
-    this.playSomeMusic = this.playSomeMusic.bind(this);
+    this.wrapper = React.createRef();
 
     window.onSpotifyWebPlaybackSDKReady = () => {
       const token = hashmap.access_token;
@@ -113,20 +108,20 @@ class App extends Component {
     }
   }
 
-  fetchUserData(token) {
+  fetchUserData = (token) => {
     axios("https://api.spotify.com/v1/me")
       .then((result) => this.fetchPlaylists(result.data.id))
       .catch((error) => error);
-  }
+  };
 
-  fetchPlaylists(userid) {
+  fetchPlaylists = (userid) => {
     axios(`https://api.spotify.com/v1/users/${userid}/playlists?limit=50`)
       .then((result) => this.setInitialList(result.data.items))
       .catch((error) => error);
-  }
+  };
 
-  setInitialList(items) {
-    let playListArray = items.map(({ id, name, tracks, images }) => ({
+  setInitialList = (items) => {
+    const playListArray = items.map(({ id, name, tracks, images }) => ({
       id: id,
       name: name,
       tracksCount: tracks.total,
@@ -134,87 +129,39 @@ class App extends Component {
       checked: false,
     }));
     this.setState({ playListArray });
-  }
+  };
 
-  selectPlayList(playList) {
+  selectPlayList = (playList) => {
     playList.checked = !playList.checked;
     const selectedPlaylistArray = this.state.playListArray.filter(
       (playlist) => playlist.checked
     );
     this.setState({ selectedPlaylistArray });
-  }
+  };
 
-  generateRandomizedPlaylist() {
-    const mapPlaylistTrack = new Map();
-    let trackCount = 0;
-
-    while (trackCount < PLAYLIST_SIZE) {
-      const randomPlaylist = this.state.selectedPlaylistArray[
-        this.getRandomIntFromZeroToMax(this.state.selectedPlaylistArray.length)
-      ];
-      const randomTrackIndexInPlaylist = this.getRandomIntFromZeroToMax(
-        randomPlaylist.tracksCount
-      );
-
-      let playListArray;
-      if (mapPlaylistTrack.has(randomPlaylist.id)) {
-        playListArray = mapPlaylistTrack.get(randomPlaylist.id);
-      } else {
-        playListArray = [];
-        mapPlaylistTrack.set(randomPlaylist.id, playListArray);
-      }
-
-      if (!playListArray.includes(randomTrackIndexInPlaylist)) {
-        playListArray.push(randomTrackIndexInPlaylist);
-        trackCount++;
-      }
-    }
-
-    const promiseArr = [];
-    for (let entry of mapPlaylistTrack) {
-      const playListId = entry[0];
-      for (let trackIndex of entry[1]) {
-        promiseArr.push(this.getPlaylistItem(playListId, trackIndex));
-      }
-    }
-
+  playSomeMusic = (trackList) => {
+    const randomTrackUriList = trackList.map((item) => item.track.uri);
+    console.log("random track list: " + trackList);
+    this.randomTrackList = trackList;
     axios
-      .all(promiseArr)
-      .then(axios.spread(this.spreadFunction))
-      .catch((error) => error);
-  }
-
-  spreadFunction(...res) {
-    this.randomTrackList = res.reduce(function (alltracks, thisPlaylisttracks) {
-      alltracks.push(thisPlaylisttracks.data.items[0]);
-      return alltracks;
-    }, []);
-
-    const randomTrackUriList = this.randomTrackList.map(
-      (item) => item.track.uri
-    );
-
-    this.playSomeMusic(this.deviceId, randomTrackUriList);
-  }
-
-  getPlaylistItem(playListId, trackIndex) {
-    return axios.get(
-      `https://api.spotify.com/v1/playlists/${playListId}/tracks?limit=1&offset=${trackIndex}`
-    );
-  }
-
-  getRandomIntFromZeroToMax(maxInt) {
-    return Math.floor(Math.random() * maxInt);
-  }
-
-  playSomeMusic(deviceid, trackList) {
-    axios
-      .put(`https://api.spotify.com/v1/me/player/play?device_id=${deviceid}`, {
-        uris: trackList,
-      })
+      .put(
+        `https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`,
+        {
+          uris: randomTrackUriList,
+        }
+      )
       .then((result) => this.setPlayerState())
       .catch((error) => error);
-  }
+  };
+
+  generateRandomizedPlaylist = (numberOfTracks) => {
+    const playListGenerator = new PlaylistGenerator(this.token);
+    playListGenerator.generateRandomizedPlaylist(
+      this.state.selectedPlaylistArray,
+      numberOfTracks,
+      this.playSomeMusic
+    );
+  };
 
   render() {
     if (!this.state.playListArray) {
@@ -231,14 +178,15 @@ class App extends Component {
         </div>
         <div>
           <div style={{ width: "50%", margin: "0 auto", padding: "20px" }}>
+            <Controller
+              generateButtonEnabled={generateButtonEnabled}
+              generateRandomizedPlaylistMethod={this.generateRandomizedPlaylist}
+            />
             <Table
               data={this.state.playListArray}
               onClickCallBack={this.selectPlayList}
-              generateButtonEnabled={generateButtonEnabled}
               playerState={this.state.playerState}
-              generateRandomizedPlaylistMethod={this.generateRandomizedPlaylist}
             />
-
             <div></div>
             <Player
               playerState={this.state.playerState}

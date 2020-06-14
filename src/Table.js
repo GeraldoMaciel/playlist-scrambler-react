@@ -3,16 +3,8 @@ import Figure from "react-bootstrap/Figure";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Fade from "react-bootstrap/Fade";
-import Button from "react-bootstrap/Button";
 
-function Table({
-  data,
-  onClickCallBack,
-  generateButtonEnabled,
-  playerState,
-  generateRandomizedPlaylistMethod,
-}) {
+function Table({ data, onClickCallBack, playerState }) {
   if (playerState) {
     return null;
   }
@@ -31,15 +23,6 @@ function Table({
 
   return (
     <div>
-      <Fade in={generateButtonEnabled}>
-        <Button
-          size="lg"
-          onClick={() => generateRandomizedPlaylistMethod()}
-          block
-        >
-          Generate randomized playlist
-        </Button>
-      </Fade>
       <Container>
         {chunkedPlayListArray.map((row) => {
           return (
