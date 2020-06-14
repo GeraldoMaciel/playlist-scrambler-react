@@ -108,6 +108,26 @@ class App extends Component {
     }
   }
 
+  shuffleArray = (array) => {
+    var currentIndex = array.length,
+      temporaryValue,
+      randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+
+      // And swap it with the current element.
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+  };
+
   fetchUserData = (token) => {
     axios("https://api.spotify.com/v1/me")
       .then((result) => this.fetchPlaylists(result.data.id))
@@ -128,7 +148,7 @@ class App extends Component {
       image: images[0],
       checked: false,
     }));
-    this.setState({ playListArray });
+    this.setState({ playListArray: this.shuffleArray(playListArray) });
   };
 
   selectPlayList = (playList) => {
@@ -167,9 +187,35 @@ class App extends Component {
     if (!this.state.playListArray) {
       return null;
     }
-    const generateButtonEnabled =
-      this.state.selectedPlaylistArray &&
-      this.state.selectedPlaylistArray.length > 0;
+
+    let toRender = null;
+    if (this.state.playerState) {
+      toRender = (
+        <Player
+          playerState={this.state.playerState}
+          randomTrackList={this.randomTrackList}
+          deviceId={this.deviceId}
+        />
+      );
+    } else {
+      const generateButtonEnabled =
+        this.state.selectedPlaylistArray &&
+        this.state.selectedPlaylistArray.length > 0;
+
+      toRender = (
+        <div>
+          <Controller
+            generateButtonEnabled={generateButtonEnabled}
+            generateRandomizedPlaylistMethod={this.generateRandomizedPlaylist}
+          />
+          <Table
+            data={this.state.playListArray}
+            onClickCallBack={this.selectPlayList}
+            playerState={this.state.playerState}
+          />
+        </div>
+      );
+    }
 
     return (
       <div className="App">
@@ -178,21 +224,7 @@ class App extends Component {
         </div>
         <div>
           <div style={{ width: "50%", margin: "0 auto", padding: "20px" }}>
-            <Controller
-              generateButtonEnabled={generateButtonEnabled}
-              generateRandomizedPlaylistMethod={this.generateRandomizedPlaylist}
-            />
-            <Table
-              data={this.state.playListArray}
-              onClickCallBack={this.selectPlayList}
-              playerState={this.state.playerState}
-            />
-            <div></div>
-            <Player
-              playerState={this.state.playerState}
-              randomTrackList={this.randomTrackList}
-              deviceId={this.deviceId}
-            />
+            {toRender}
           </div>
         </div>
       </div>
