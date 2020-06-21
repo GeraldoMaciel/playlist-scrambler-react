@@ -44,7 +44,7 @@ window.location.hash = "";
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = { playListArray: [] };
 
     this.wrapper = React.createRef();
 
@@ -132,21 +132,32 @@ class App extends Component {
       .catch((error) => error);
   };
 
-  fetchPlaylists = (userid) => {
-    axios(`https://api.spotify.com/v1/users/${userid}/playlists?limit=50`)
-      .then((result) => this.setInitialPlayListArray(result.data.items))
+  fetchPlaylists = (userid, url) => {
+    if (!url) {
+      url = `https://api.spotify.com/v1/users/${userid}/playlists?limit=50`;
+    }
+    axios(url)
+      .then((result) => {
+        console.log(result);
+        this.setInitialPlayListArray(result.data.items);
+        if (result.data.next) {
+          this.fetchPlaylists(userid, result.data.next);
+        }
+      })
       .catch((error) => error);
   };
 
   setInitialPlayListArray = (items) => {
-    const playListArray = items.map(({ id, name, tracks, images }) => ({
+    const aplayListArray = items.map(({ id, name, tracks, images }) => ({
       id: id,
       name: name,
       tracksCount: tracks.total,
       image: images[0],
       checked: false,
     }));
-    this.setState({ playListArray: this.shuffleArray(playListArray) });
+
+    const totalPlayListArray = this.state.playListArray.concat(aplayListArray);
+    this.setState({ playListArray: this.shuffleArray(totalPlayListArray) });
   };
 
   selectPlayList = (playList) => {
