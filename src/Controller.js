@@ -33,10 +33,7 @@ class Controller extends Component {
   };
 
   render() {
-    const {
-      generateButtonEnabled,
-      generateRandomizedPlaylistMethod,
-    } = this.props;
+    const { generateButtonEnabled, generateRandomizedPlaylist } = this.props;
     return (
       <Container>
         <Row>
@@ -44,9 +41,7 @@ class Controller extends Component {
           <Col>
             <Button
               size="lg"
-              onClick={() =>
-                generateRandomizedPlaylistMethod(this.state.numberOfTracks)
-              }
+              onClick={() => generateRandomizedPlaylist(this.state)}
               disabled={!generateButtonEnabled}
               block
             >

@@ -5,32 +5,58 @@ class PlaylistGenerator {
     axios.defaults.headers.common["Authorization"] = "Bearer " + token;
   }
 
-  generateRandomizedPlaylist = (
+  async generateRandomizedPlaylist(
     selectedPlaylistArray,
-    numberOfTracks,
+    generationConfig,
     callBack
-  ) => {
-    const spreadFunction = (...res) => {
-      let randomTrackList = res.reduce(function (
-        alltracks,
-        thisPlaylisttracks
-      ) {
-        alltracks.push(thisPlaylisttracks.data.items[0]);
-        return alltracks;
-      },
-      []);
+  ) {
+    console.log(generationConfig);
 
-      callBack(randomTrackList);
-    };
+    let checkNewPlaylistGenerationFinished = null;
+    let runTrackAcceptance = null;
+    let trackCount = 0;
+    let totalPlaylistTime = 0;
+    let loopCount = 0;
+    const generatedPlayList = [];
+
+    if (generationConfig.numberOfTracksBasedGenetarion) {
+      checkNewPlaylistGenerationFinished = () => {
+        return (
+          trackCount === generationConfig.numberOfTracks || loopCount > 100
+        );
+      };
+
+      runTrackAcceptance = (track) => {
+        trackCount++;
+        totalPlaylistTime = totalPlaylistTime + track.duration_ms;
+        generatedPlayList.push(track);
+      };
+    } else {
+      checkNewPlaylistGenerationFinished = () => {
+        return (
+          Math.abs(totalPlaylistTime - generationConfig.duration * 60000) <
+            60000 || loopCount > 100
+        );
+      };
+
+      runTrackAcceptance = (track) => {
+        const newDuration = totalPlaylistTime + track.duration_ms;
+        if (generationConfig.duration * 60000 - newDuration > -60000) {
+          totalPlaylistTime = newDuration;
+          trackCount++;
+          generatedPlayList.push(track);
+        }
+      };
+    }
 
     const mapPlaylistTrack = new Map();
-    let trackCount = 0;
 
-    while (trackCount < numberOfTracks) {
+    while (!checkNewPlaylistGenerationFinished()) {
       const randomPlaylist =
         selectedPlaylistArray[
           this.getRandomIntFromZeroToMax(selectedPlaylistArray.length)
         ];
+
       const randomTrackIndexInPlaylist = this.getRandomIntFromZeroToMax(
         randomPlaylist.tracksCount
       );
@@ -44,30 +70,20 @@ class PlaylistGenerator {
       }
 
       if (!playListArray.includes(randomTrackIndexInPlaylist)) {
-        playListArray.push(randomTrackIndexInPlaylist);
-        trackCount++;
+        const result = await axios.get(
+          `https://api.spotify.com/v1/playlists/${randomPlaylist.id}/tracks?limit=1&offset=${randomTrackIndexInPlaylist}`
+        );
+        console.log(result);
+        runTrackAcceptance(result.data.items[0].track);
       }
+      loopCount++;
     }
 
-    const promiseArr = [];
-    for (let entry of mapPlaylistTrack) {
-      const playListId = entry[0];
-      for (let trackIndex of entry[1]) {
-        promiseArr.push(this.getPlaylistItem(playListId, trackIndex));
-      }
-    }
-
-    axios
-      .all(promiseArr)
-      .then(axios.spread(spreadFunction))
-      .catch((error) => error);
-  };
-
-  getPlaylistItem = (playListId, trackIndex) => {
-    return axios.get(
-      `https://api.spotify.com/v1/playlists/${playListId}/tracks?limit=1&offset=${trackIndex}`
+    console.log(
+      `playlist generation finished. totalTrackCount: ${trackCount} , totalDuration: ${totalPlaylistTime}`
     );
-  };
+    callBack(generatedPlayList);
+  }
 
   getRandomIntFromZeroToMax = (maxInt) => {
     return Math.floor(Math.random() * maxInt);

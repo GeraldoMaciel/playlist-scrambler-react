@@ -107,21 +107,21 @@ class Player extends Component {
             </Col>
             <Col>
               <ListGroup style={style}>
-                {this.props.randomTrackList.map((item) => {
+                {this.props.randomTrackList.map((track) => {
                   return (
-                    <ListGroup.Item key={item.track.uri}>
+                    <ListGroup.Item key={track.uri}>
                       <table>
                         <tbody>
                           <tr>
                             <td>
                               {" "}
                               <Image
-                                src={item.track.album.images[2].url}
+                                src={track.album.images[2].url}
                                 roundedCircle
                               />
                             </td>
                             <td>
-                              {item.track.name}- {item.track.album.name}
+                              {track.name}- {track.album.name}
                             </td>
                           </tr>
                         </tbody>

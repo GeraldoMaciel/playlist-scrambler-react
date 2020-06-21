@@ -27,8 +27,6 @@ const scopes = [
   "playlist-read-collaborative",
 ];
 
-const PLAYLIST_SIZE = 20;
-
 // Get the hash of the url
 const hashmap = window.location.hash
   .substring(1)
@@ -136,11 +134,11 @@ class App extends Component {
 
   fetchPlaylists = (userid) => {
     axios(`https://api.spotify.com/v1/users/${userid}/playlists?limit=50`)
-      .then((result) => this.setInitialList(result.data.items))
+      .then((result) => this.setInitialPlayListArray(result.data.items))
       .catch((error) => error);
   };
 
-  setInitialList = (items) => {
+  setInitialPlayListArray = (items) => {
     const playListArray = items.map(({ id, name, tracks, images }) => ({
       id: id,
       name: name,
@@ -160,7 +158,7 @@ class App extends Component {
   };
 
   playSomeMusic = (trackList) => {
-    const randomTrackUriList = trackList.map((item) => item.track.uri);
+    const randomTrackUriList = trackList.map((track) => track.uri);
     console.log("random track list: " + trackList);
     this.randomTrackList = trackList;
     axios
@@ -174,11 +172,11 @@ class App extends Component {
       .catch((error) => error);
   };
 
-  generateRandomizedPlaylist = (numberOfTracks) => {
+  generateRandomizedPlaylist = (generationConfig) => {
     const playListGenerator = new PlaylistGenerator(this.token);
     playListGenerator.generateRandomizedPlaylist(
       this.state.selectedPlaylistArray,
-      numberOfTracks,
+      generationConfig,
       this.playSomeMusic
     );
   };
@@ -206,7 +204,7 @@ class App extends Component {
         <div>
           <Controller
             generateButtonEnabled={generateButtonEnabled}
-            generateRandomizedPlaylistMethod={this.generateRandomizedPlaylist}
+            generateRandomizedPlaylist={this.generateRandomizedPlaylist}
           />
           <Table
             data={this.state.playListArray}
